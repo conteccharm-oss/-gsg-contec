@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>가족사랑기프트</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="logo">🎁 가족사랑기프트</h1>
+      <button class="btn-crawl" id="btnCrawl" title="상품 새로고침">
+        <span class="crawl-icon">↻</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-tab="products">
+      <span class="nav-icon">🛍</span><span>상품</span>
+    </button>
+    <button class="nav-item" data-tab="apply">
+      <span class="nav-icon">📝</span><span>신청</span>
+    </button>
+    <button class="nav-item" data-tab="admin">
+      <span class="nav-icon">⚙️</span><span>관리자</span>
+    </button>
+  </nav>
+
+  <main class="main-content">
+
+    <!-- ===== 상품 탭 ===== -->
+    <section id="tab-products" class="tab-section active">
+      <div class="filter-bar">
+        <div class="vendor-chips">
+          <button class="chip active" data-vendor="all">전체</button>
+          <button class="chip" data-vendor="fmans">🌸 꽃집청년들</button>
+          <button class="chip" data-vendor="sirloin">🥩 설로인</button>
+          <button class="chip" data-vendor="allfresh">🍎 올프레쉬</button>
+        </div>
+        <div class="vendor-chips" style="margin-top:8px">
+          <button class="chip active" data-price="all">전체 가격</button>
+          <button class="chip" data-price="low">5만원대</button>
+          <button class="chip" data-price="mid">10만원대</button>
+          <button class="chip" data-price="high">15만원대</button>
+        </div>
+        <div class="search-row">
+          <input type="text" id="searchInput" class="search-input" placeholder="상품명 검색...">
+        </div>
+      </div>
+
+      <div id="productGrid" class="product-grid">
+        <div class="loading">상품 불러오는 중...</div>
+      </div>
+    </section>
+
+    <!-- ===== 신청 탭 ===== -->
+    <section id="tab-apply" class="tab-section">
+      <div class="apply-wrap">
+        <!-- 스텝 탭 -->
+        <div class="step-tab-bar">
+          <button class="step-tab active" data-step="1"><span class="step-tab-num">1</span>신청자</button>
+          <button class="step-tab" data-step="2"><span class="step-tab-num">2</span>기념일</button>
+          <button class="step-tab" data-step="3"><span class="step-tab-num">3</span>상품</button>
+          <button class="step-tab" data-step="4"><span class="step-tab-num">4</span>배송</button>
+        </div>
+
+        <!-- Step 1: 신청자 정보 -->
+        <div class="step-content active" id="step1">
+          <div class="step-card">
+            <h3 class="step-title">👤 신청자 정보</h3>
+
+            <!-- 기존/신규 토글 -->
+            <div class="applicant-type-toggle">
+              <button class="type-btn active" id="btnTypeNew" data-type="new">신규 신청자</button>
+              <button class="type-btn" id="btnTypeExisting" data-type="existing">기존 신청자</button>
+            </div>
+
+            <!-- 기존 신청자: 검색 -->
+            <div id="existingSearch" class="existing-search hidden">
+              <div class="form-group">
+                <label>이름으로 검색</label>
+                <input type="text" id="existingNameInput" placeholder="이름을 입력하세요">
+              </div>
+              <div id="existingResults" class="existing-results"></div>
+            </div>
+
+            <!-- 신청자 정보 폼 -->
+            <div id="applicantForm">
+              <div class="usage-check-box" id="usageBox" style="display:none">
+                <div class="usage-row">
+                  <span>올해 사용 횟수</span><strong id="usageCount">-/2회</strong>
+                </div>
+                <div class="usage-row">
+                  <span>잔여 예산</span><strong id="usageBudget">-원</strong>
+                </div>
+                <div id="usageWarn" class="usage-warn hidden"></div>
+              </div>
+              <div class="form-group">
+                <label>이름 <span class="required">*</span></label>
+                <input type="text" id="applyName" placeholder="홍길동">
+              </div>
+              <div class="form-group">
+                <label>부서</label>
+                <input type="text" id="applyDept" placeholder="인사조직관리팀">
+              </div>
+              <div class="form-group">
+                <label>사번</label>
+                <input type="text" id="applyEmpId" placeholder="2024001">
+              </div>
+              <div class="form-group">
+                <label>연락처</label>
+                <input type="tel" id="applyContact" placeholder="010-0000-0000">
+              </div>
+              <button class="btn-next" id="btnStep1Next">다음 →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: 기념일 -->
+        <div class="step-content" id="step2">
+          <div class="step-card">
+            <h3 class="step-title">🗓 기념일 정보</h3>
+
+            <!-- 신청 횟수 선택 -->
+            <div class="form-group">
+              <label>이번 신청 횟수 <span class="required">*</span></label>
+              <div class="ann-count-toggle">
+                <button class="ann-count-btn active" data-count="1">1회 신청</button>
+                <button class="ann-count-btn" data-count="2">2회 신청</button>
+              </div>
+            </div>
+
+            <!-- 기념일 1 -->
+            <div class="ann-slot" id="annSlot0">
+              <div class="ann-slot-header">🗓 기념일 1</div>
+              <div class="form-group">
+                <label>기념일 종류 <span class="required">*</span></label>
+                <div class="radio-group">
+                  <label class="radio-item"><input type="radio" name="annType0" value="부모님 생신"> 부모님 생신</label>
+                  <label class="radio-item"><input type="radio" name="annType0" value="부모님 결혼기념일"> 부모님 결혼기념일</label>
+                  <label class="radio-item"><input type="radio" name="annType0" value="배우자 생일"> 배우자 생일</label>
+                  <label class="radio-item"><input type="radio" name="annType0" value="본인 결혼기념일"> 본인 결혼기념일</label>
+                  <label class="radio-item"><input type="radio" name="annType0" value="배우자 부모님 생신"> 배우자 부모님 생신 <span class="new-badge">NEW</span></label>
+                  <label class="radio-item"><input type="radio" name="annType0" value="배우자 부모님 결혼기념일"> 배우자 부모님 결혼기념일 <span class="new-badge">NEW</span></label>
+                  <label class="radio-item"><input type="radio" name="annType0" value="자녀 생일"> 자녀 생일 <span class="new-badge">NEW</span></label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>기념일 날짜 <span class="required">*</span></label>
+                <input type="date" id="applyAnnDate0">
+              </div>
+              <div class="form-group">
+                <label>수령인 이름 <span class="required">*</span></label>
+                <input type="text" id="applyRecipient0" placeholder="선물 받는 분 성함">
+              </div>
+            </div>
+
+            <!-- 기념일 2 (2회 선택 시 표시) -->
+            <div class="ann-slot hidden" id="annSlot1">
+              <div class="ann-slot-divider"></div>
+              <div class="ann-slot-header">🗓 기념일 2</div>
+              <div class="form-group">
+                <label>기념일 종류 <span class="required">*</span></label>
+                <div class="radio-group">
+                  <label class="radio-item"><input type="radio" name="annType1" value="부모님 생신"> 부모님 생신</label>
+                  <label class="radio-item"><input type="radio" name="annType1" value="부모님 결혼기념일"> 부모님 결혼기념일</label>
+                  <label class="radio-item"><input type="radio" name="annType1" value="배우자 생일"> 배우자 생일</label>
+                  <label class="radio-item"><input type="radio" name="annType1" value="본인 결혼기념일"> 본인 결혼기념일</label>
+                  <label class="radio-item"><input type="radio" name="annType1" value="배우자 부모님 생신"> 배우자 부모님 생신 <span class="new-badge">NEW</span></label>
+                  <label class="radio-item"><input type="radio" name="annType1" value="배우자 부모님 결혼기념일"> 배우자 부모님 결혼기념일 <span class="new-badge">NEW</span></label>
+                  <label class="radio-item"><input type="radio" name="annType1" value="자녀 생일"> 자녀 생일 <span class="new-badge">NEW</span></label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>기념일 날짜 <span class="required">*</span></label>
+                <input type="date" id="applyAnnDate1">
+              </div>
+              <div class="form-group">
+                <label>수령인 이름 <span class="required">*</span></label>
+                <input type="text" id="applyRecipient1" placeholder="선물 받는 분 성함">
+              </div>
+            </div>
+
+            <div class="step-btns">
+              <button class="btn-prev" id="btnStep2Prev">← 이전</button>
+              <button class="btn-next" id="btnStep2Next">다음 →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: 기념일별 상품 선택 -->
+        <div class="step-content" id="step3">
+          <div class="step-card">
+            <h3 class="step-title">🎁 기념일별 상품 선택</h3>
+            <p class="step-desc">기념일을 선택 후 상품을 담아주세요 · 각 기념일 최대 2개 · 15만원 이내</p>
+
+            <!-- 기념일 탭 -->
+            <div class="ann-tab-bar" id="annTabBar"></div>
+
+            <!-- 찜한 상품 -->
+            <div id="wishlistSection" style="display:none">
+              <div class="wishlist-section-title">♥ 찜한 상품 <span id="wishlistCount" style="font-size:12px;color:var(--text-muted)"></span></div>
+              <div id="wishlistItems" class="wishlist-scroll"></div>
+            </div>
+
+            <!-- 선택된 상품 프리뷰 -->
+            <div class="selected-products-preview" id="selectedPreview">
+              <div class="empty-selection">상품을 선택해주세요 (0/2)</div>
+            </div>
+
+            <!-- 업체 필터 -->
+            <div class="product-filter-row">
+              <button class="chip active" data-pvendor="all">전체</button>
+              <button class="chip" data-pvendor="fmans">🌸 꽃</button>
+              <button class="chip" data-pvendor="sirloin">🥩 한우</button>
+              <button class="chip" data-pvendor="allfresh">🍎 과일</button>
+            </div>
+            <!-- 가격 필터 -->
+            <div class="product-filter-row" style="margin-top:6px">
+              <button class="chip active" data-pprice="all">전체</button>
+              <button class="chip" data-pprice="low">5만원대</button>
+              <button class="chip" data-pprice="mid">10만원대</button>
+              <button class="chip" data-pprice="high">15만원대</button>
+            </div>
+
+            <div id="applyProductGrid" class="product-grid mini"></div>
+            <div id="applyPagination" class="pagination-bar"></div>
+
+            <div class="step-btns">
+              <button class="btn-prev" id="btnStep3Prev">← 이전</button>
+              <button class="btn-next" id="btnStep3Next">다음 →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: 배송 정보 -->
+        <div class="step-content" id="step4">
+          <div class="step-card">
+            <h3 class="step-title">🚚 배송 정보</h3>
+
+            <!-- 선택 상품 요약 -->
+            <div class="order-summary" id="orderSummary"></div>
+
+            <div class="form-group">
+              <label>배송 주소 <span class="required">*</span></label>
+              <div class="addr-search-row">
+                <input type="text" id="applyPostcode" placeholder="우편번호" readonly>
+                <button type="button" class="btn-addr-search" id="btnAddrSearch">🔍 주소 찾기</button>
+              </div>
+              <input type="text" id="applyAddr" placeholder="주소 찾기 버튼을 눌러주세요" readonly style="margin-top:8px">
+              <input type="text" id="applyAddrDetail" placeholder="상세 주소 (동/호수 등)" style="margin-top:8px">
+            </div>
+            <div class="form-group">
+              <label>배송 연락처 <span class="required">*</span></label>
+              <input type="tel" id="applyDelivContact" placeholder="010-0000-0000">
+            </div>
+            <div class="form-group">
+              <label>요청사항</label>
+              <textarea id="applyNote" placeholder="배송 시 특이사항이 있으면 입력해주세요" rows="3"></textarea>
+            </div>
+
+            <div class="agree-box">
+              <label class="agree-label">
+                <input type="checkbox" id="agreeCheck">
+                <span>위 내용으로 선물 신청에 동의합니다. 신청 후 기념일 <strong>전월 20일</strong> 이전에 발송 처리됩니다.</span>
+              </label>
+            </div>
+
+            <div class="step-btns">
+              <button class="btn-prev" id="btnStep4Prev">← 이전</button>
+              <button class="btn-submit" id="btnSubmit">✓ 신청 완료</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 완료 화면 -->
+        <div class="step-content" id="stepDone">
+          <div class="done-card">
+            <div class="done-icon">🎉</div>
+            <h3>신청이 완료됐습니다!</h3>
+            <p id="doneMessage"></p>
+            <button class="btn-new-apply" id="btnNewApply">새 신청하기</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 관리자 탭 ===== -->
+    <section id="tab-admin" class="tab-section">
+
+      <!-- 관리자 서브 네비 -->
+      <div class="admin-sub-nav">
+        <button class="admin-sub-btn active" data-sub="applications">📋 신청내역</button>
+        <button class="admin-sub-btn" data-sub="delivery">🚚 배송관리</button>
+        <button class="admin-sub-btn" data-sub="settings">⚙️ 설정</button>
+      </div>
+
+      <!-- ── 신청 내역 ── -->
+      <div id="adminSub-applications" class="admin-sub-section active">
+        <div class="section-header">
+          <h2>신청 내역</h2>
+          <a href="/api/applications/export" class="btn-export">CSV ↓</a>
+        </div>
+        <div class="admin-filter">
+          <input type="text" id="adminSearch" placeholder="이름·부서 검색" class="search-input">
+          <select id="adminStatus" class="status-select">
+            <option value="">전체 상태</option>
+            <option value="pending">대기</option>
+            <option value="processing">처리중</option>
+            <option value="done">완료</option>
+            <option value="cancelled">취소</option>
+          </select>
+        </div>
+        <div id="applicationList" class="application-list">
+          <div class="loading">불러오는 중...</div>
+        </div>
+      </div>
+
+      <!-- ── 배송 관리 ── -->
+      <div id="adminSub-delivery" class="admin-sub-section">
+        <div class="delivery-vendor-tabs">
+          <button class="dvend-btn active" data-dvendor="fmans">🌸 꽃집청년들</button>
+          <button class="dvend-btn" data-dvendor="sirloin">🥩 설로인</button>
+          <button class="dvend-btn" data-dvendor="allfresh">🍎 올프레쉬</button>
+        </div>
+        <div id="fmansExcelRow" class="fmans-excel-row">
+          <div class="fmans-excel-desc">꽃집청년들 발주용 엑셀을 다운로드합니다</div>
+          <button class="btn-fmans-excel" id="btnFmansExcel">📊 주문서 Excel 다운로드</button>
+        </div>
+        <div id="deliveryList" class="delivery-list"></div>
+      </div>
+
+      <!-- ── 설정 ── -->
+      <div id="adminSub-settings" class="admin-sub-section">
+        <div class="settings-card">
+          <h3>📬 업체 담당자 연락처</h3>
+          <p class="setting-desc">발주·문의 시 사용할 업체별 담당자 정보를 입력하세요.</p>
+          <div class="vendor-contact-group">
+            <div class="vendor-contact-label"><span class="vendor-tag fmans">꽃집청년들</span></div>
+            <div class="form-group"><label>담당자명</label><input type="text" id="settingFmansName" placeholder="담당자 이름"></div>
+            <div class="form-group"><label>이메일</label><input type="email" id="settingFmansEmail" placeholder="담당자 이메일"></div>
+            <div class="form-group"><label>연락처</label><input type="tel" id="settingFmansPhone" placeholder="010-0000-0000"></div>
+          </div>
+          <div class="vendor-contact-group">
+            <div class="vendor-contact-label"><span class="vendor-tag sirloin">설로인</span></div>
+            <div class="form-group"><label>담당자명</label><input type="text" id="settingSirloinName" placeholder="담당자 이름"></div>
+            <div class="form-group"><label>이메일</label><input type="email" id="settingSirloinEmail" placeholder="담당자 이메일"></div>
+            <div class="form-group"><label>연락처</label><input type="tel" id="settingSirloinPhone" placeholder="010-0000-0000"></div>
+          </div>
+          <div class="vendor-contact-group">
+            <div class="vendor-contact-label"><span class="vendor-tag allfresh">올프레쉬</span></div>
+            <div class="form-group"><label>담당자명</label><input type="text" id="settingAllfreshName" placeholder="담당자 이름"></div>
+            <div class="form-group"><label>이메일</label><input type="email" id="settingAllfreshEmail" placeholder="담당자 이메일"></div>
+            <div class="form-group"><label>연락처</label><input type="tel" id="settingAllfreshPhone" placeholder="010-0000-0000"></div>
+          </div>
+          <div class="form-group" style="margin-top:16px">
+            <label>관리자 비밀번호</label>
+            <input type="password" id="settingAdminPw" placeholder="새 비밀번호 입력 시 변경">
+          </div>
+          <button class="btn-save-settings" id="btnSaveSettings">저장</button>
+        </div>
+        <div class="settings-card">
+          <h3>👥 임직원 명단 관리</h3>
+          <p class="setting-desc">이름을 한 줄에 하나씩 입력하세요. 명단에 있는 이름은 신규 신청이 불가합니다.</p>
+          <div class="form-group">
+            <label>임직원 명단 (한 줄에 한 명)</label>
+            <textarea id="settingEmployeeList" rows="10" placeholder="홍길동&#10;김철수&#10;이영희&#10;..."></textarea>
+          </div>
+          <button class="btn-save-settings" id="btnSaveEmployeeList">명단 저장</button>
+          <p id="employeeListStatus" class="crawl-status"></p>
+        </div>
+        <div class="settings-card">
+          <h3>🔄 상품 데이터 관리</h3>
+          <p class="setting-desc">3개 업체 상품(5~15만원)을 다시 수집합니다.</p>
+          <button class="btn-crawl-full" id="btnCrawlFull">전체 상품 새로고침</button>
+          <p id="crawlStatus" class="crawl-status"></p>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- 상품 상세 팝업 -->
+  <div id="productModal" class="modal-overlay hidden">
+    <div class="modal product-detail-modal">
+      <div class="modal-header">
+        <h3 id="pModalName">상품명</h3>
+        <button class="modal-close" id="btnPModalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <img id="pModalImg" src="" alt="" style="width:100%;border-radius:10px;margin-bottom:12px">
+        <div id="pModalInfo"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-view-product" id="btnPModalClose2">닫기</button>
+        <a id="pModalLink" href="#" target="_blank" class="btn-add-product">쇼핑몰에서 보기 ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 관리자 잠금 모달 -->
+  <div id="adminLockModal" class="modal-overlay hidden" style="align-items:center">
+    <div class="modal admin-lock-modal">
+      <div style="font-size:40px;margin-bottom:12px">🔒</div>
+      <h3>관리자 전용 메뉴</h3>
+      <p>관리자 탭은 비밀번호가 필요합니다.</p>
+      <input type="password" id="adminPwInput" placeholder="비밀번호" maxlength="20">
+      <button class="btn-admin-confirm" id="btnAdminConfirm">확인</button>
+      <p class="admin-lock-error" id="adminLockError"></p>
+    </div>
+  </div>
+
+  <!-- 기존 신청자 감지 팝업 -->
+  <div id="existingAlertModal" class="modal-overlay hidden" style="align-items:center">
+    <div class="modal alert-modal">
+      <div class="alert-icon">⚠️</div>
+      <h3 id="alertModalTitle">이미 신청 이력이 있습니다</h3>
+      <p id="alertModalBody" class="alert-modal-body"></p>
+      <div class="alert-modal-history" id="alertModalHistory"></div>
+      <div class="alert-modal-actions">
+        <button class="btn-alert-switch" id="btnAlertSwitch">기존 신청자로 전환</button>
+        <button class="btn-alert-continue" id="btnAlertContinue">신규로 계속하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 찜하기 안내 팝업 -->
+  <div id="wishlistInfoModal" class="modal-overlay hidden" style="align-items:center">
+    <div class="modal" style="max-width:320px;padding:24px">
+      <div style="font-size:32px;text-align:center;margin-bottom:10px">♥</div>
+      <h3 style="text-align:center;margin-bottom:14px">찜하기 기능 안내</h3>
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:6px">상품탭에서 ♥ 버튼으로 마음에 드는 상품을 찜해두면, 신청 탭 Step 3에서 바로 담을 수 있습니다.</p>
+      <p style="font-size:12px;color:var(--text-muted);background:#FFF5F5;border-radius:8px;padding:8px 12px;margin-top:10px;margin-bottom:18px">찜 목록은 같은 기기에서만 유지되며, 다른 사람의 찜 목록과 공유되지 않습니다.</p>
+      <button id="btnWishlistInfoClose" style="width:100%;padding:11px;background:var(--primary);color:white;border:none;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer">확인</button>
+    </div>
+  </div>
+
+  <!-- 신청 마감일 초과 팝업 -->
+  <div id="deadlineAlertModal" class="modal-overlay" style="display:none;align-items:center">
+    <div class="modal" style="max-width:320px;text-align:center;padding:28px 24px">
+      <div style="font-size:36px;margin-bottom:12px">🚫</div>
+      <h3 id="deadlineAlertTitle" style="font-size:17px;margin-bottom:12px;color:var(--primary)"></h3>
+      <p id="deadlineAlertMsg" style="font-size:14px;color:var(--text-muted);white-space:pre-line;line-height:1.6;margin-bottom:20px"></p>
+      <button onclick="document.getElementById('deadlineAlertModal').style.display='none'" style="width:100%;padding:12px;background:var(--primary);color:white;border:none;border-radius:24px;font-size:15px;font-weight:600;cursor:pointer">확인</button>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
