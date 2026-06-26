@@ -925,30 +925,106 @@ document.querySelectorAll('.dvend-btn').forEach(function(btn) {
   });
 });
 
+var _pendingOrderVendor = '';
+var VENDOR_LABELS = { fmans: '꽃집청년들', sirloin: '설로인', allfresh: '올프레쉬' };
+
 document.querySelectorAll('.btn-order-email').forEach(function(btn) {
   btn.addEventListener('click', async function() {
-    var vendor = btn.dataset.vendor;
-    var LABELS = { fmans: '꽃집청년들', sirloin: '설로인', allfresh: '올프레쉬' };
-    btn.disabled = true;
-    btn.textContent = '발송 중...';
-    try {
-      var res = await fetch(API + '/api/send-order-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vendor: vendor }),
-      });
-      var data = await res.json();
-      if (res.ok) {
-        toast(LABELS[vendor] + ' 발주 이메일 발송 완료 (' + data.count + '건 → ' + data.to + ')', 'success');
-      } else {
-        toast(data.error || '발송 실패', 'error');
-      }
-    } catch(e) {
-      toast('발송 실패', 'error');
-    }
-    btn.disabled = false;
-    btn.textContent = '📧 발주 이메일 발송';
+    _pendingOrderVendor = btn.dataset.vendor;
+    await showOrderPreview(_pendingOrderVendor);
   });
+});
+
+async function showOrderPreview(vendor) {
+  var modal = document.getElementById('orderPreviewModal');
+  var body = document.getElementById('orderPreviewBody');
+  var title = document.getElementById('orderPreviewTitle');
+  title.textContent = VENDOR_LABELS[vendor] + ' 발주 미리보기';
+  body.innerHTML = '<div class="loading">불러오는 중...</div>';
+  modal.classList.remove('hidden');
+
+  try {
+    var [appsRes, settingsRes] = await Promise.all([
+      fetch(API + '/api/applications'),
+      fetch(API + '/api/settings'),
+    ]);
+    var apps = await appsRes.json();
+    var settings = await settingsRes.json();
+    var vendorEmail = settings['vendor_' + vendor + 'email'] || '(이메일 미설정)';
+
+    var filtered = apps.filter(function(a) {
+      return a.status !== 'cancelled' &&
+        (a.products || []).some(function(p) { return p.vendor === vendor; });
+    }).sort(function(a, b) { return (a.anniversary_date || '').localeCompare(b.anniversary_date || ''); });
+
+    if (!filtered.length) {
+      body.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p class="empty-text">발주할 신청 내역이 없습니다</p></div>';
+      return;
+    }
+
+    var hasExcel = vendor === 'fmans';
+    var rows = filtered.map(function(a, i) {
+      var prods = (a.products || []).filter(function(p) { return p.vendor === vendor; });
+      return '<tr style="background:' + (i % 2 === 0 ? '#fff' : '#fff8fb') + '">' +
+        '<td style="padding:8px 10px;border-bottom:1px solid #FFE3E6;font-size:13px">' + (i+1) + '</td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid #FFE3E6;font-size:13px"><strong>' + a.employee_name + '</strong><br><span style="color:#aaa;font-size:11px">' + (a.department||'') + '</span></td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid #FFE3E6;font-size:13px">' + a.anniversary_type + '<br><span style="color:#aaa;font-size:11px">' + (a.anniversary_date||'') + '</span></td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid #FFE3E6;font-size:13px">' + (a.recipient_name_delivery||a.recipient_name||'-') + '</td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid #FFE3E6;font-size:12px">' + prods.map(function(p){ return p.name + ' (' + p.price.toLocaleString() + '원)'; }).join('<br>') + '</td>' +
+        (vendor === 'fmans' ? '<td style="padding:8px 10px;border-bottom:1px solid #FFE3E6;font-size:12px">' + (a.delivery_time||'-') + '</td>' : '') +
+        '</tr>';
+    }).join('');
+
+    body.innerHTML =
+      '<div style="background:#FFF5F8;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">' +
+        '<div>📧 수신: <strong>' + vendorEmail + '</strong></div>' +
+        '<div style="margin-top:4px">📦 총 <strong>' + filtered.length + '건</strong>' + (hasExcel ? ' · 📎 엑셀 파일 첨부' : '') + '</div>' +
+      '</div>' +
+      '<div style="overflow-x:auto">' +
+      '<table style="width:100%;border-collapse:collapse;min-width:420px">' +
+        '<thead><tr style="background:#F48CAE;color:white">' +
+          '<th style="padding:8px 10px;font-size:12px;font-weight:600">#</th>' +
+          '<th style="padding:8px 10px;font-size:12px;font-weight:600">신청자</th>' +
+          '<th style="padding:8px 10px;font-size:12px;font-weight:600">기념일</th>' +
+          '<th style="padding:8px 10px;font-size:12px;font-weight:600">수령인</th>' +
+          '<th style="padding:8px 10px;font-size:12px;font-weight:600">상품</th>' +
+          (vendor === 'fmans' ? '<th style="padding:8px 10px;font-size:12px;font-weight:600">시간대</th>' : '') +
+        '</tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table></div>';
+  } catch(e) {
+    body.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p class="empty-text">불러오기 실패</p></div>';
+  }
+}
+
+document.getElementById('btnOrderPreviewClose').addEventListener('click', function() {
+  document.getElementById('orderPreviewModal').classList.add('hidden');
+});
+document.getElementById('btnOrderPreviewCancel').addEventListener('click', function() {
+  document.getElementById('orderPreviewModal').classList.add('hidden');
+});
+document.getElementById('btnOrderPreviewSend').addEventListener('click', async function() {
+  var btn = this;
+  btn.disabled = true;
+  btn.textContent = '발송 중...';
+  try {
+    var res = await fetch(API + '/api/send-order-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vendor: _pendingOrderVendor }),
+    });
+    var data = await res.json();
+    document.getElementById('orderPreviewModal').classList.add('hidden');
+    if (res.ok) {
+      toast(VENDOR_LABELS[_pendingOrderVendor] + ' 발주 이메일 발송 완료 (' + data.count + '건)', 'success');
+    } else {
+      toast(data.error || '발송 실패', 'error');
+    }
+  } catch(e) {
+    toast('발송 실패', 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = '📧 이메일 발송';
 });
 
 function getOrderDeadline(anniversaryDateStr) {

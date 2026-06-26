@@ -491,6 +491,21 @@
     </div>
   </div>
 
+  <!-- 발주 미리보기 모달 -->
+  <div id="orderPreviewModal" class="modal-overlay hidden" style="align-items:center">
+    <div class="modal" style="max-width:600px;border-radius:20px;max-height:85vh;overflow-y:auto">
+      <div class="modal-header">
+        <h3 id="orderPreviewTitle">발주 미리보기</h3>
+        <button class="modal-close" id="btnOrderPreviewClose">✕</button>
+      </div>
+      <div class="modal-body" id="orderPreviewBody"></div>
+      <div class="modal-footer" style="gap:10px">
+        <button class="btn-view-product" id="btnOrderPreviewCancel" style="flex:1">취소</button>
+        <button class="btn-add-product" id="btnOrderPreviewSend" style="flex:2;font-size:15px;font-weight:700;cursor:pointer">📧 이메일 발송</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toastContainer" class="toast-container"></div>
 
   <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
