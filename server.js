@@ -392,6 +392,142 @@ app.post('/api/google-form-url', (req, res) => {
   res.json({ url: prefilledUrl });
 });
 
+// ── 발주 이메일 발송 ──────────────────────────────────────
+app.post('/api/send-order-email', async (req, res) => {
+  const { vendor } = req.body;
+  const VENDOR_LABELS = { fmans: '꽃집청년들', sirloin: '설로인', allfresh: '올프레쉬' };
+  const vendorLabel = VENDOR_LABELS[vendor] || vendor;
+
+  const s = db.getAllSettings();
+  const emailUser = s.email_user;
+  const emailPass = s.email_pass;
+  const vendorEmail = s['vendor_' + vendor + 'email'];
+
+  if (!emailUser || !emailPass) return res.status(400).json({ error: '발신 이메일 설정이 없습니다. 설정 탭에서 이메일을 설정해주세요.' });
+  if (!vendorEmail) return res.status(400).json({ error: `${vendorLabel} 담당자 이메일이 없습니다. 설정 탭에서 입력해주세요.` });
+
+  const apps = db.getAllApplications().filter(a =>
+    a.status !== 'cancelled' &&
+    (a.products || []).some(p => p.vendor === vendor)
+  ).sort((a, b) => (a.anniversary_date || '').localeCompare(b.anniversary_date || ''));
+
+  if (!apps.length) return res.status(400).json({ error: '발주할 신청 내역이 없습니다.' });
+
+  const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const rows = apps.map((a, i) => {
+    const prods = (a.products || []).filter(p => p.vendor === vendor);
+    const prodNames = prods.map(p => `${p.name} (${p.price.toLocaleString()}원)${p.cakeAdded ? ' + 케이크' : ''}`).join('<br>');
+    const timeCell = vendor === 'fmans' ? `<td style="padding:10px;border:1px solid #eee;font-size:13px">${a.delivery_time || '-'}</td>` : '';
+    return `<tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'}">
+      <td style="padding:10px;border:1px solid #eee;text-align:center;font-size:13px">${i + 1}</td>
+      <td style="padding:10px;border:1px solid #eee;font-size:13px">${a.employee_name}<br><span style="color:#888;font-size:11px">${a.department || ''}</span></td>
+      <td style="padding:10px;border:1px solid #eee;font-size:13px">${a.anniversary_type}<br><span style="color:#888;font-size:11px">${a.anniversary_date || ''}</span></td>
+      <td style="padding:10px;border:1px solid #eee;font-size:13px">${a.recipient_name_delivery || a.recipient_name || '-'}<br><span style="color:#888;font-size:11px">${a.recipient_contact || a.delivery_contact || ''}</span></td>
+      <td style="padding:10px;border:1px solid #eee;font-size:13px">${prodNames}</td>
+      <td style="padding:10px;border:1px solid #eee;font-size:13px">${a.delivery_address || '-'}</td>
+      ${timeCell}
+      <td style="padding:10px;border:1px solid #eee;font-size:13px">${a.note || '-'}</td>
+    </tr>`;
+  }).join('');
+
+  const timeHeader = vendor === 'fmans' ? '<th style="padding:10px;background:#FF6B6B;color:white;border:1px solid #e55">배송시간대</th>' : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"></head>
+<body style="font-family:-apple-system,'Apple SD Gothic Neo',Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
+  <div style="max-width:900px;margin:0 auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.1);">
+    <div style="background:linear-gradient(135deg,#FF6B6B,#FF8E53);padding:28px 32px;">
+      <div style="color:white;font-size:22px;font-weight:700;">📦 ${vendorLabel} 발주 요청</div>
+      <div style="color:rgba(255,255,255,0.85);font-size:14px;margin-top:6px;">${today} · 총 ${apps.length}건</div>
+    </div>
+    <div style="padding:24px;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;min-width:700px;">
+        <thead>
+          <tr>
+            <th style="padding:10px;background:#FF6B6B;color:white;border:1px solid #e55">번호</th>
+            <th style="padding:10px;background:#FF6B6B;color:white;border:1px solid #e55">신청자</th>
+            <th style="padding:10px;background:#FF6B6B;color:white;border:1px solid #e55">기념일</th>
+            <th style="padding:10px;background:#FF6B6B;color:white;border:1px solid #e55">수령인</th>
+            <th style="padding:10px;background:#FF6B6B;color:white;border:1px solid #e55">상품</th>
+            <th style="padding:10px;background:#FF6B6B;color:white;border:1px solid #e55">배송주소</th>
+            ${timeHeader}
+            <th style="padding:10px;background:#FF6B6B;color:white;border:1px solid #e55">요청사항</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid #f0f0f0;color:#aaa;font-size:12px;text-align:center;">
+      컨텍 가족사랑기프트 발주 시스템 · 문의: ${emailUser}
+    </div>
+  </div>
+</body></html>`;
+
+  try {
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: emailUser, pass: emailPass },
+    });
+
+    const mailOptions = {
+      from: `"컨텍 가족사랑기프트" <${emailUser}>`,
+      to: vendorEmail,
+      subject: `[컨텍] ${vendorLabel} 발주 요청 (${apps.length}건) - ${today}`,
+      html,
+    };
+
+    // 꽃집청년들은 엑셀 첨부
+    if (vendor === 'fmans') {
+      const wb = XLSX.readFile(FMANS_TEMPLATE);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const COLS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(['AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN','AO']);
+      COLS.forEach(col => { delete ws[col + '3']; });
+      let rowNum = 3;
+      apps.forEach(a => {
+        const fmansProds = (a.products || []).filter(p => p.vendor === 'fmans');
+        fmansProds.forEach(product => {
+          const slots = [{ code: '', name: product.name, price: product.price, qty: 1 }];
+          if (product.cakeAdded) slots.push({ code: 'ZZ00201', name: '케이크 [1호]', price: 34000, qty: 1 });
+          const pcMatch = (a.delivery_address || '').match(/\[(\d{5})\]/);
+          const postcode = pcMatch ? pcMatch[1] : '';
+          const addr = (a.delivery_address || '').replace(/\[\d{5}\]\s*/, '').trim();
+          let excelDate = '';
+          if (a.anniversary_date) { const d = new Date(a.anniversary_date); excelDate = Math.floor(d.getTime() / 86400000 + 25569); }
+          const setCell = (col, val) => {
+            const ref = col + rowNum;
+            if (val === '' || val === null || val === undefined) return;
+            ws[ref] = typeof val === 'number' ? { t: 'n', v: val } : { t: 's', v: String(val) };
+          };
+          setCell('A', '전화'); setCell('B', '택배'); setCell('C', a.employee_name || '');
+          setCell('D', slots[0]?.code || ''); setCell('E', slots[0]?.name || ''); setCell('F', slots[0]?.price || ''); setCell('G', slots[0]?.qty || 1);
+          setCell('H', slots[1]?.code || ''); setCell('I', slots[1]?.name || ''); setCell('J', slots[1]?.price || ''); setCell('K', slots[1]?.qty || '');
+          setCell('Q', a.contact || '');
+          setCell('T', a.recipient_name_delivery || a.recipient_name || '');
+          setCell('U', a.recipient_contact || a.delivery_contact || '');
+          setCell('W', postcode); setCell('X', addr); setCell('Y', excelDate);
+          setCell('AB', a.employee_name || '');
+          setCell('AC', a.note || '');
+          setCell('AD', [a.delivery_time, a.note].filter(Boolean).join(' / ') || '');
+          setCell('AO', String(a.id));
+          rowNum++;
+        });
+      });
+      ws['!ref'] = `A1:AO${Math.max(rowNum - 1, 3)}`;
+      const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      const dateStr = new Date().toLocaleDateString('ko-KR').replace(/\. /g, '').replace('.', '');
+      mailOptions.attachments = [{ filename: `꽃집청년들_발주서_${dateStr}.xlsx`, content: buf }];
+    }
+
+    await transporter.sendMail(mailOptions);
+    res.json({ ok: true, count: apps.length, to: vendorEmail });
+  } catch (err) {
+    console.error('발주 이메일 오류:', err.message);
+    res.status(500).json({ error: '이메일 발송 실패: ' + err.message });
+  }
+});
+
 app.post('/api/test-notification', async (req, res) => {
   const dummy = {
     person_name: '테스트',

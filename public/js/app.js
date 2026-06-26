@@ -919,7 +919,35 @@ document.querySelectorAll('.dvend-btn').forEach(function(btn) {
     btn.classList.add('active');
     _deliveryVendor = btn.dataset.dvendor;
     document.getElementById('fmansExcelRow').style.display = _deliveryVendor === 'fmans' ? 'flex' : 'none';
+    document.getElementById('sirloinOrderRow').style.display = _deliveryVendor === 'sirloin' ? 'flex' : 'none';
+    document.getElementById('allfreshOrderRow').style.display = _deliveryVendor === 'allfresh' ? 'flex' : 'none';
     renderDeliveryList();
+  });
+});
+
+document.querySelectorAll('.btn-order-email').forEach(function(btn) {
+  btn.addEventListener('click', async function() {
+    var vendor = btn.dataset.vendor;
+    var LABELS = { fmans: '꽃집청년들', sirloin: '설로인', allfresh: '올프레쉬' };
+    btn.disabled = true;
+    btn.textContent = '발송 중...';
+    try {
+      var res = await fetch(API + '/api/send-order-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendor: vendor }),
+      });
+      var data = await res.json();
+      if (res.ok) {
+        toast(LABELS[vendor] + ' 발주 이메일 발송 완료 (' + data.count + '건 → ' + data.to + ')', 'success');
+      } else {
+        toast(data.error || '발송 실패', 'error');
+      }
+    } catch(e) {
+      toast('발송 실패', 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = '📧 발주 이메일 발송';
   });
 });
 
