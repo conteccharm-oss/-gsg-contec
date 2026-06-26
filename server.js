@@ -190,7 +190,8 @@ app.post('/api/applications', (req, res) => {
   const {
     employee_name, department, employee_id, contact,
     anniversary_type, anniversary_date, recipient_name,
-    products, delivery_address, delivery_contact, note,
+    recipient_name_delivery, recipient_contact,
+    products, delivery_address, delivery_contact, delivery_time, note,
   } = req.body;
 
   if (!employee_name || !anniversary_type || !anniversary_date || !products?.length) {
@@ -214,8 +215,9 @@ app.post('/api/applications', (req, res) => {
   const app = db.createApplication({
     employee_name, department, employee_id, contact,
     anniversary_type, anniversary_date, recipient_name,
+    recipient_name_delivery, recipient_contact,
     products, total_price,
-    delivery_address, delivery_contact, note,
+    delivery_address, delivery_contact, delivery_time, note,
   });
 
   res.json(app);
@@ -301,14 +303,14 @@ app.get('/api/applications/fmans-excel', (req, res) => {
         setCell('O', slots[2]?.qty || '');
         // P~S: 주문자 정보 (상호명, 휴대폰, 이메일, 연락처2)
         setCell('Q', app.contact || '');
-        setCell('T', app.recipient_name || '');    // 받는분성함
-        setCell('U', app.delivery_contact || '');  // 받는분휴대폰
+        setCell('T', app.recipient_name_delivery || app.recipient_name || '');  // 받는분성함
+        setCell('U', app.recipient_contact || app.delivery_contact || '');     // 받는분휴대폰
         setCell('W', postcode);                    // 우편번호
         setCell('X', addr);                        // 배송주소1
         setCell('Y', excelDate);                   // 희망배송일
         setCell('AB', app.employee_name || '');    // 보내는분(좌측)
         setCell('AC', app.note || '');             // 카드메시지
-        setCell('AD', app.note || '');             // 요구사항
+        setCell('AD', [app.delivery_time, app.note].filter(Boolean).join(' / ') || ''); // 요구사항(시간대+메모)
         setCell('AO', String(app.id));             // 업체주문번호
 
         rowNum++;

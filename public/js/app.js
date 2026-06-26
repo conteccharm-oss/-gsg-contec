@@ -320,7 +320,7 @@ function goToStep(n) {
     else if (s < n) tab.classList.add('done');
   });
   if (n === 3) { state.applyPage = 1; renderStep3(); }
-  if (n === 4) renderOrderSummary();
+  if (n === 4) { renderOrderSummary(); prefillStep4(); }
 }
 document.querySelectorAll('.step-tab').forEach(function(tab) {
   tab.addEventListener('click', function() {
@@ -773,6 +773,21 @@ function renderOrderSummary() {
   document.getElementById('orderSummary').innerHTML = html;
 }
 
+function hasFmansProduct() {
+  for (var i = 0; i < state.numAnniversaries; i++) {
+    if (state.annSlots[i].products.some(function(p) { return p.vendor === 'fmans'; })) return true;
+  }
+  return false;
+}
+
+function prefillStep4() {
+  var recipientEl = document.getElementById('applyRecipientName');
+  if (!recipientEl.value) {
+    recipientEl.value = state.annSlots[0].recipient || '';
+  }
+  document.getElementById('delivTimeGroup').style.display = hasFmansProduct() ? 'block' : 'none';
+}
+
 document.getElementById('btnStep4Prev').addEventListener('click', function() { goToStep(3); });
 
 document.getElementById('btnAddrSearch').addEventListener('click', function() {
@@ -795,9 +810,19 @@ document.getElementById('btnSubmit').addEventListener('click', submitApplication
 
 async function submitApplication() {
   if (!document.getElementById('agreeCheck').checked) { toast('동의 체크를 해주세요', 'error'); return; }
+  var recipientName = document.getElementById('applyRecipientName').value.trim();
+  var recipientContact = document.getElementById('applyRecipientContact').value.trim();
   var postcode = document.getElementById('applyPostcode').value.trim();
   var addr = document.getElementById('applyAddr').value.trim();
   var delivContact = document.getElementById('applyDelivContact').value.trim();
+  var delivTime = '';
+  if (hasFmansProduct()) {
+    var checkedTime = document.querySelector('input[name="delivTime"]:checked');
+    if (!checkedTime) { toast('꽃집청년들 배송 시간대를 선택해주세요', 'error'); return; }
+    delivTime = checkedTime.value;
+  }
+  if (!recipientName) { toast('받는 분 성함을 입력해주세요', 'error'); return; }
+  if (!recipientContact) { toast('받는 분 연락처를 입력해주세요', 'error'); return; }
   if (!addr) { toast('배송 주소를 입력해주세요', 'error'); return; }
   if (!delivContact) { toast('배송 연락처를 입력해주세요', 'error'); return; }
 
@@ -809,8 +834,11 @@ async function submitApplication() {
     department: document.getElementById('applyDept').value.trim(),
     employee_id: document.getElementById('applyEmpId').value.trim(),
     contact: document.getElementById('applyContact').value.trim(),
+    recipient_name_delivery: recipientName,
+    recipient_contact: recipientContact,
     delivery_address: (postcode ? '[' + postcode + '] ' : '') + addr + ' ' + document.getElementById('applyAddrDetail').value.trim(),
     delivery_contact: delivContact,
+    delivery_time: delivTime,
     note: document.getElementById('applyNote').value.trim(),
   };
 
@@ -847,7 +875,7 @@ async function submitApplication() {
 
 /* ── 새 신청하기 ───────────────────────────────── */
 document.getElementById('btnNewApply').addEventListener('click', function() {
-  ['applyName','applyDept','applyEmpId','applyContact','applyPostcode','applyAddr','applyAddrDetail','applyDelivContact','applyNote'].forEach(function(id) {
+  ['applyName','applyDept','applyEmpId','applyContact','applyRecipientName','applyRecipientContact','applyPostcode','applyAddr','applyAddrDetail','applyDelivContact','applyNote'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
   [0,1].forEach(function(i) {
@@ -861,6 +889,8 @@ document.getElementById('btnNewApply').addEventListener('click', function() {
     state.annSlots[i].recipient = '';
     state.annSlots[i].products = [];
   });
+  document.querySelectorAll('input[name="delivTime"]').forEach(function(r) { r.checked = false; });
+  document.getElementById('delivTimeGroup').style.display = 'none';
   document.getElementById('agreeCheck').checked = false;
   state.numAnniversaries = 1; state.applicantType = 'new'; state.activeAnnSlot = 0; state.remainingBudget = 150000;
   document.getElementById('usageBox').style.display = 'none';
