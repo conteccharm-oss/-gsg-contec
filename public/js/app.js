@@ -564,7 +564,7 @@ document.getElementById('btnStep2Next').addEventListener('click', function() {
       var deadlineStr = (d.getMonth()) + '월 20일'; // 전월
       showDeadlineAlert(
         (d.getMonth() + 1) + '월 기념일 신청 마감',
-        (d.getMonth() + 1) + '월 기념일은 ' + deadlineStr + '까지 신청 가능합니다.\n\n마감일이 지나 신청이 제한됩니다. (배송일 최소 3일 필요)\n\n신청이 필요한 경우 인사조직관리팀 이슬에게 문의 부탁드립니다.'
+        (d.getMonth() + 1) + '월 기념일은 ' + deadlineStr + '까지 신청 가능합니다.\n\n마감일이 지나 신청이 제한됩니다.\n\n신청이 필요한 경우 인사조직관리팀 이슬에게 문의 부탁드립니다. (배송일 최소 3일 필요)'
       );
       return;
     }
@@ -627,10 +627,18 @@ function toggleApplyProduct(product) {
   if (idx !== -1) {
     slot.products.splice(idx, 1);
   } else {
-    if (slot.products.length >= 2) { toast('기념일당 최대 2개까지 선택 가능합니다', 'error'); return; }
+    if (slot.products.length >= 1) { toast('기념일당 상품은 1개만 선택 가능합니다', 'error'); return; }
     var totalAll = getTotalAllSlots();
-    if (totalAll + product.price > state.remainingBudget) {
-      toast('잔여 예산을 초과합니다 (현재 ' + totalAll.toLocaleString() + '원, 잔여 ' + (state.remainingBudget - totalAll).toLocaleString() + '원)', 'error');
+    var remaining = state.remainingBudget - totalAll;
+    var exceeded;
+    if (state.applicantType === 'existing') {
+      var budgetTierCeil = (Math.floor(remaining / 10000) + 1) * 10000;
+      exceeded = remaining <= 0 || product.price >= budgetTierCeil;
+    } else {
+      exceeded = product.price > remaining;
+    }
+    if (exceeded) {
+      toast('잔여 예산을 초과합니다 (잔여 ' + remaining.toLocaleString() + '원)', 'error');
       return;
     }
     slot.products.push(product);

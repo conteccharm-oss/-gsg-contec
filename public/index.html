@@ -3,36 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>가족사랑기프트</title>
+  <title>컨텍 가족사랑기프트</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
   <header class="header">
     <div class="header-inner">
-      <h1 class="logo">🎁 가족사랑기프트</h1>
+      <h1 class="logo"><span class="logo-emoji">💝</span> 컨텍 가족사랑기프트</h1>
+      <nav class="top-nav">
+        <button class="nav-item active" data-tab="products"><span class="nav-icon">🛍</span> 상품</button>
+        <button class="nav-item" data-tab="apply"><span class="nav-icon">📝</span> 신청</button>
+        <button class="nav-item" data-tab="admin"><span class="nav-icon">⚙️</span> 관리자</button>
+      </nav>
       <button class="btn-crawl" id="btnCrawl" title="상품 새로고침">
         <span class="crawl-icon">↻</span>
       </button>
     </div>
   </header>
 
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-tab="products">
-      <span class="nav-icon">🛍</span><span>상품</span>
-    </button>
-    <button class="nav-item" data-tab="apply">
-      <span class="nav-icon">📝</span><span>신청</span>
-    </button>
-    <button class="nav-item" data-tab="admin">
-      <span class="nav-icon">⚙️</span><span>관리자</span>
-    </button>
-  </nav>
-
   <main class="main-content">
 
     <!-- ===== 상품 탭 ===== -->
     <section id="tab-products" class="tab-section active">
+      <div class="hero-banner">
+        <div class="hero-content">
+          <span class="hero-badge">💝 회사가 챙겨주는 기념일</span>
+          <h2 class="hero-title">컨텍 가족사랑기프트</h2>
+          <p class="hero-desc">소중한 가족에게 전하는 따뜻한 마음, 컨텍이 함께합니다.<br>매년 2회, 회당 최대 15만원 한도 내에서 원하는 기념일 선물을 직접 골라 신청해 보세요.</p>
+        </div>
+        <div class="hero-deco">
+          <div class="heart-icon bubble-1">❤️</div>
+          <div class="heart-icon bubble-2">💖</div>
+          <div class="heart-icon bubble-3">💝</div>
+        </div>
+      </div>
       <div class="filter-bar">
         <div class="vendor-chips">
           <button class="chip active" data-vendor="all">전체</button>
@@ -58,6 +63,18 @@
 
     <!-- ===== 신청 탭 ===== -->
     <section id="tab-apply" class="tab-section">
+      <div class="hero-banner">
+        <div class="hero-content">
+          <span class="hero-badge">💝 회사가 챙겨주는 기념일</span>
+          <h2 class="hero-title">가족사랑기프트 선물 신청</h2>
+          <p class="hero-desc">가장 소중한 사람에게 마음을 전하는 날, 컨텍이 기분 좋은 선물이 되어 드릴게요.<br>신청 단계를 차근차근 진행하여 원하는 배송지와 선물을 등록해 보세요.</p>
+        </div>
+        <div class="hero-deco">
+          <div class="heart-icon bubble-1">❤️</div>
+          <div class="heart-icon bubble-2">💖</div>
+          <div class="heart-icon bubble-3">💝</div>
+        </div>
+      </div>
       <div class="apply-wrap">
         <!-- 스텝 탭 -->
         <div class="step-tab-bar">
@@ -195,7 +212,7 @@
         <div class="step-content" id="step3">
           <div class="step-card">
             <h3 class="step-title">🎁 기념일별 상품 선택</h3>
-            <p class="step-desc">기념일을 선택 후 상품을 담아주세요 · 각 기념일 최대 2개 · 15만원 이내</p>
+            <p class="step-desc">기념일을 선택 후 상품을 담아주세요 · 기념일당 1개 · 15만원 이내</p>
 
             <!-- 기념일 탭 -->
             <div class="ann-tab-bar" id="annTabBar"></div>
