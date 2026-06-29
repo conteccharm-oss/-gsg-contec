@@ -48,28 +48,9 @@ var state = {
   wishlist: [],
 };
 
-/* ═══════════════════════════════════════════════
-   관리자 잠금
-═══════════════════════════════════════════════ */
-var ADMIN_TABS = ['admin'];
-var _pendingAdminTab = '';
-
-function isAdminAuth() {
-  return sessionStorage.getItem('adminAuth') === '1';
-}
-
 document.querySelectorAll('.nav-item').forEach(function(btn) {
   btn.addEventListener('click', function() {
-    var tab = btn.dataset.tab;
-    if (ADMIN_TABS.indexOf(tab) !== -1 && !isAdminAuth()) {
-      _pendingAdminTab = tab;
-      document.getElementById('adminPwInput').value = '';
-      document.getElementById('adminLockError').textContent = '';
-      document.getElementById('adminLockModal').classList.remove('hidden');
-      setTimeout(function() { document.getElementById('adminPwInput').focus(); }, 100);
-      return;
-    }
-    switchTab(tab);
+    switchTab(btn.dataset.tab);
   });
 });
 
@@ -97,30 +78,6 @@ function switchTab(tab) {
   }
 }
 
-// 관리자 비밀번호 확인
-document.getElementById('btnAdminConfirm').addEventListener('click', confirmAdminPw);
-document.getElementById('adminPwInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') confirmAdminPw();
-});
-async function confirmAdminPw() {
-  var pw = document.getElementById('adminPwInput').value;
-  var errEl = document.getElementById('adminLockError');
-  try {
-    var res = await fetch(API + '/api/verify-admin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password: pw}) });
-    var data = await res.json();
-    if (data.ok) {
-      sessionStorage.setItem('adminAuth', '1');
-      document.getElementById('adminLockModal').classList.add('hidden');
-      switchTab(_pendingAdminTab);
-      _pendingAdminTab = '';
-    } else {
-      errEl.textContent = '비밀번호가 올바르지 않습니다';
-      document.getElementById('adminPwInput').select();
-    }
-  } catch(e) {
-    errEl.textContent = '서버 오류';
-  }
-}
 
 /* ═══════════════════════════════════════════════
    상품 탭
@@ -1239,8 +1196,6 @@ async function loadSettings() {
 }
 document.getElementById('btnSaveSettings').addEventListener('click', async function() {
   var payload = {};
-  var newPw = document.getElementById('settingAdminPw').value;
-  if (newPw) payload.admin_pw = newPw;
   var fields = ['FmansName','FmansEmail','FmansPhone','SirloinName','SirloinEmail','SirloinPhone','AllfreshName','AllfreshEmail','AllfreshPhone'];
   fields.forEach(function(f) {
     var el = document.getElementById('setting' + f);

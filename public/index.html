@@ -415,10 +415,6 @@
             <div class="form-group"><label>이메일</label><input type="email" id="settingAllfreshEmail" placeholder="담당자 이메일"></div>
             <div class="form-group"><label>연락처</label><input type="tel" id="settingAllfreshPhone" placeholder="010-0000-0000"></div>
           </div>
-          <div class="form-group" style="margin-top:16px">
-            <label>관리자 비밀번호</label>
-            <input type="password" id="settingAdminPw" placeholder="새 비밀번호 입력 시 변경">
-          </div>
           <button class="btn-save-settings" id="btnSaveSettings">저장</button>
         </div>
         <div class="settings-card">
@@ -457,18 +453,6 @@
         <button class="btn-view-product" id="btnPModalClose2">닫기</button>
         <a id="pModalLink" href="#" target="_blank" class="btn-add-product">쇼핑몰에서 보기 ↗</a>
       </div>
-    </div>
-  </div>
-
-  <!-- 관리자 잠금 모달 -->
-  <div id="adminLockModal" class="modal-overlay hidden" style="align-items:center">
-    <div class="modal admin-lock-modal">
-      <div style="font-size:40px;margin-bottom:12px">🔒</div>
-      <h3>관리자 전용 메뉴</h3>
-      <p>관리자 탭은 비밀번호가 필요합니다.</p>
-      <input type="password" id="adminPwInput" placeholder="비밀번호" maxlength="20">
-      <button class="btn-admin-confirm" id="btnAdminConfirm">확인</button>
-      <p class="admin-lock-error" id="adminLockError"></p>
     </div>
   </div>
 
